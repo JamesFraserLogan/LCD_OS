@@ -4,9 +4,10 @@
 #include <string.h>
 typedef struct node
 {
-	struct screen *screen;
+	struct screen **screen;
 	struct node **node;
-	size_t n;
+	size_t nscreens;
+	size_t nnodes;
 }node;
 typedef struct screen
 {
@@ -14,11 +15,12 @@ typedef struct screen
 	size_t n;
 }screen;
 typedef struct node **spine;
-struct node **bundle(size_t n,struct node *node,...);
-struct node *makenode(struct screen *screen,struct node **node,size_t n);
+struct node **bundle_node(size_t n,struct node *node,...);
+struct screen **bundle_screen(size_t n,struct screen *screen,...);
+struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,size_t nnodes);
 struct screen *makescreen(size_t n,char *line,...);
 struct node **makespine(size_t n,struct node *node,...);
-struct node **bundle(size_t n,struct node *node,...)
+struct node **bundle_node(size_t n,struct node *node,...)
 {
 	if(n<=0||node==NULL)
 	{
@@ -43,13 +45,38 @@ struct node **bundle(size_t n,struct node *node,...)
 	va_end(ap);
 	return ret;
 }
-struct node *makenode(struct screen *screen,struct node **node,size_t n)
+struct screen **bundle_screen(size_t n,struct screen *screen,...)
+{
+	if(n<=0||screen==NULL)
+	{
+		return NULL;
+	}
+	struct screen **ret=(struct screen **)malloc(sizeof(struct screen *));
+	if(ret==NULL)
+	{
+		return NULL;
+	}
+	*ret=screen;
+	va_list ap;
+	va_start(ap,screen);
+	for(size_t i=1;i<n;i++)
+	{
+		*(ret+i)=va_arg(ap,struct screen *);
+		if(*(ret+i)==NULL)
+		{
+			return NULL;
+		}
+	}
+	va_end(ap);
+	return ret;
+} 
+struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,size_t nnodes)
 {
 	if(screen==NULL)
 	{
 		return NULL;
 	}
-	if(node==NULL&&n!=0)
+	if(node==NULL&&nnodes!=0)
 	{
 		return NULL;
 	}
@@ -60,7 +87,8 @@ struct node *makenode(struct screen *screen,struct node **node,size_t n)
 	}
 	ret->screen=screen;
 	ret->node=node;
-	ret->n=n;
+	ret->nscreens=nscreens;
+	ret->nnodes=nnodes;
 	return ret;
 }
 struct screen *makescreen(size_t n,char *line,...)
