@@ -8,18 +8,17 @@ typedef struct node
 	struct node **node;
 	size_t nscreens;
 	size_t nnodes;
+	size_t nopts;
 }node;
 typedef struct screen
 {
 	char **line;
 	size_t n;
 }screen;
-typedef struct node **spine;
 struct node **bundle_node(size_t n,struct node *node,...);
 struct screen **bundle_screen(size_t n,struct screen *screen,...);
-struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,size_t nnodes);
+struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,size_t nnodes,size_t nopts);
 struct screen *makescreen(size_t n,char *line,...);
-struct node **makespine(size_t n,struct node *node,...);
 struct node **bundle_node(size_t n,struct node *node,...)
 {
 	if(n<=0||node==NULL)
@@ -70,7 +69,7 @@ struct screen **bundle_screen(size_t n,struct screen *screen,...)
 	va_end(ap);
 	return ret;
 } 
-struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,size_t nnodes)
+struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,size_t nnodes,size_t nopts)
 {
 	if(screen==NULL)
 	{
@@ -89,6 +88,7 @@ struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,
 	ret->node=node;
 	ret->nscreens=nscreens;
 	ret->nnodes=nnodes;
+	ret->nopts=nopts;
 	return ret;
 }
 struct screen *makescreen(size_t n,char *line,...)
@@ -130,30 +130,5 @@ struct screen *makescreen(size_t n,char *line,...)
 	va_end(ap);
 	ret->line=arr;
 	ret->n=n;
-	return ret;
-}
-struct node **makespine(size_t n,struct node *node,...)
-{
-	if(n<=0||node==NULL)
-	{
-		return NULL;
-	}
-	struct node **ret=(struct node **)malloc(sizeof(struct node *));
-	if(ret==NULL)
-	{
-		return NULL;
-	}
-	*ret=node;
-	va_list ap;
-	va_start(ap,node);
-	for(size_t i=1;i<n;i++)
-	{
-		*(ret+i)=va_arg(ap,struct node *);
-		if(*(ret+i)==NULL)
-		{
-			return NULL;
-		}
-	}
-	va_end(ap);
 	return ret;
 }
