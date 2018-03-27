@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 volatile size_t node_depth=0; // RootNode->node[a1]->node->[a2]->....->node[an] is the topology this counter follows. A node depth of 0 denotes the root node.
-size_t max_node_depth=0; // Be careful this is set correctly, it's used to determine how much memory is alloacated to the node_indices array. This would be n in the above example.
+volatile size_t max_node_depth=0; // Be careful this is set correctly, it's used to determine how much memory is alloacated to the node_indices array. This would be n in the above example.
 volatile size_t screen_count=0; // This is "i" in: RootNode->node[a1]->...->node[an]->screen[i] ; that is, this is which screen you are on in a particular node.
 volatile size_t line_count=0; // This is "j" in: RootNode->node[a1]->...->node[an]->screen[i]->line[j] ; that is, this is which line you are on in a particular screen in a particular node.
 volatile size_t *node_indices; // This is the array of node index coefficients {a1,a2,a3,...,an} in the above example.
@@ -21,7 +21,7 @@ typedef struct node_registry // Links to n registered functions to be invoked in
 {
 	struct registered_function **registered_funciton;
 	size_t n;
-	char *opt_order;
+	unsigned char *opt_order;
 }node_registry;
 typedef struct registered_function // Prepares void functions with void arguments to be inserted into a node registry.
 {
@@ -33,10 +33,14 @@ typedef struct screen // Each screen contains n lines of (possibly) variable len
 	size_t n;
 }screen;
 struct node **bundle_node(size_t n,struct node *node,...); // Bundles n nodes into a single **node. Returns NULL on error.
+struct registered_function **bundle_registered_functions(size_t n,struct registered_function *function,...); // Bundles n registered functions into a single **registered_function. Returns NULL on error.
 struct screen **bundle_screen(size_t n,struct screen *screen,...); //Bundles n screens into a single **screen. Returns Null on error.
 struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,size_t nnodes,size_t nopts); // Returns a *node. Feel free to use NULL as an input to any **node, but do not use NULL as an input to **screen. Each node must have at least one screen. Returns NULL on error.
+struct node_registry *makenodereg(char *opt_order,size_t n,registered_function **registered_function); // Returns a *node_registry. Returns NULL on error.
 struct screen *makescreen(size_t n,char *line,...); // Returns a *screen. Empty screens are not allowed. Returns NULL on error.
 void node_depth_up(struct node **node,size_t index); // Sequential function that increases node depth. Only use this starting from the root node and building up to n node depth. Use "&mynode" as input, not a bundle, as C funcitons pass by value thus a **node input allows this function to modify the target *node. Simple function with no error checking, BE CAREFUL!
+unsigned char *order_opts(size_t nopts,char *bin_sem); // Returns a binary semaphore arrary with '0's for node navigation and '1's for functions, thus ordering the options in each node structure.
+struct registered_function *register_function(void (*function)(void)); // Returns a registered_function * to a void function with void arguments.
 struct node **bundle_node(size_t n,struct node *node,...)
 {
 	if(n<=0||node==NULL)
@@ -54,6 +58,30 @@ struct node **bundle_node(size_t n,struct node *node,...)
 	for(size_t i=1;i<n;i++)
 	{
 		*(ret+i)=va_arg(ap,struct node *);
+		if(*(ret+i)==NULL)
+		{
+			return NULL;
+		}
+	}
+	va_end(ap);
+	return ret;
+}
+struct registered_function **bundle_registered_functions(size_t n,struct registered_function *function,...)
+{
+	if(n<=0||function==NULL)
+	{
+		return NULL;
+	}
+	struct registered_function **ret=(struct registered_function **)malloc(sizeof(struct registered_function *));
+	if(ret==NULL)
+	{
+		return NULL;
+	}
+	va_list ap;
+	va_start(ap,function);
+	for(size_t i=0;i<n;i++)
+	{
+		*(ret+i)=va_arg(ap,struct registered_function *);
 		if(*(ret+i)==NULL)
 		{
 			return NULL;
@@ -109,6 +137,27 @@ struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,
 	ret->nopts=nopts;
 	return ret;
 }
+struct node_registry *makenodereg(char *opt_order,size_t n,registered_function **registered_function)
+{
+	if(n<0) // incase one wants to swap out all size_t variables with ints or other signed variables
+	{
+		return NULL;
+	}
+	struct node_registry *ret=(struct node_registry *)malloc(sizeof(struct node_registry));
+	if(ret==NULL)
+	{
+		return NULL;
+	}
+	ret->opt_order=order_opts(n,opt_order);
+	if(ret->opt_order==NULL)
+	{
+		free(ret);
+		return NULL;
+	}
+	ret->n=n;
+	ret->registered_funciton=registered_function;
+	return ret;
+}
 struct screen *makescreen(size_t n,char *line,...)
 {
 	if(line==NULL)
@@ -153,4 +202,61 @@ struct screen *makescreen(size_t n,char *line,...)
 void node_depth_up(struct node **node,size_t index)
 {
 	*node=(*node)->node[index];
+}
+unsigned char *order_opts(size_t nopts,char *bin_sem)
+{
+	if(nopts==0)
+	{
+		return NULL;
+	}
+	unsigned char *ret=(unsigned char *)malloc((1+nopts)*sizeof(unsigned char));
+	if(ret==NULL)
+	{
+		return NULL;
+	}
+	for(size_t i=0;i<nopts;i++)
+	{
+		*(ret+i)='0';
+	}
+	*(ret+nopts)='\0';
+	if(bin_sem==NULL)
+	{
+		return ret;
+	}
+	if(strlen(bin_sem)!=nopts)
+	{
+		free(ret);
+		return NULL;
+	}
+	for(size_t i=0;i<nopts;i++)
+	{
+		if(*(bin_sem+i)=='1')
+		{
+			*(ret+i)='1';
+		}
+		else if(*(bin_sem+i)!='0')
+		{
+			free(ret);
+			return NULL;
+		}
+	}
+	return ret;
+}
+struct registered_function *register_function(void (*function)(void))
+{
+	if(function==NULL)
+	{
+			return NULL;
+	}
+	registered_function *ret=(struct registered_function *)malloc(sizeof(struct registered_function));
+	if(ret==NULL)
+	{
+		return NULL;
+	}
+	ret->function=function;
+	return ret;
+}
+void testvoid(void)
+{
+	printf("testvoid\n");
 }
