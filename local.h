@@ -35,8 +35,8 @@ typedef struct screen // Each screen contains n lines of (possibly) variable len
 struct node **bundle_node(size_t n,struct node *node,...); // Bundles n nodes into a single **node. Returns NULL on error.
 struct registered_function **bundle_registered_functions(size_t n,struct registered_function *function,...); // Bundles n registered functions into a single **registered_function. Returns NULL on error.
 struct screen **bundle_screen(size_t n,struct screen *screen,...); //Bundles n screens into a single **screen. Returns Null on error.
-struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,size_t nnodes,size_t nopts); // Returns a *node. Feel free to use NULL as an input to any **node, but do not use NULL as an input to **screen. Each node must have at least one screen. Returns NULL on error.
-struct node_registry *makenodereg(char *opt_order,size_t n,registered_function **registered_function); // Returns a *node_registry. Returns NULL on error.
+struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,size_t nnodes,size_t nopts,struct node_registry *reg); // Returns a *node. Feel free to use NULL as an input to any **node, but do not use NULL as an input to **screen. Each node must have at least one screen. Returns NULL on error.
+struct node_registry *makenodereg(unsigned char *opt_order,size_t n,registered_function **registered_function); // Returns a *node_registry. Returns NULL on error.
 struct screen *makescreen(size_t n,char *line,...); // Returns a *screen. Empty screens are not allowed. Returns NULL on error.
 void node_depth_up(struct node **node,size_t index); // Sequential function that increases node depth. Only use this starting from the root node and building up to n node depth. Use "&mynode" as input, not a bundle, as C funcitons pass by value thus a **node input allows this function to modify the target *node. Simple function with no error checking, BE CAREFUL!
 unsigned char *order_opts(size_t nopts,char *bin_sem); // Returns a binary semaphore arrary with '0's for node navigation and '1's for functions, thus ordering the options in each node structure.
@@ -115,13 +115,17 @@ struct screen **bundle_screen(size_t n,struct screen *screen,...)
 	va_end(ap);
 	return ret;
 } 
-struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,size_t nnodes,size_t nopts)
+struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,size_t nnodes,size_t nopts,struct node_registry *reg)
 {
 	if(screen==NULL)
 	{
 		return NULL;
 	}
 	if(node==NULL&&nnodes!=0)
+	{
+		return NULL;
+	}
+	if(reg==NULL)
 	{
 		return NULL;
 	}
@@ -135,9 +139,10 @@ struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,
 	ret->nscreens=nscreens;
 	ret->nnodes=nnodes;
 	ret->nopts=nopts;
+	ret->node_registry=reg;
 	return ret;
 }
-struct node_registry *makenodereg(char *opt_order,size_t n,registered_function **registered_function)
+struct node_registry *makenodereg(unsigned char *opt_order,size_t n,registered_function **registered_function)
 {
 	if(n<0) // incase one wants to swap out all size_t variables with ints or other signed variables
 	{
@@ -148,12 +153,7 @@ struct node_registry *makenodereg(char *opt_order,size_t n,registered_function *
 	{
 		return NULL;
 	}
-	ret->opt_order=order_opts(n,opt_order);
-	if(ret->opt_order==NULL)
-	{
-		free(ret);
-		return NULL;
-	}
+	ret->opt_order=opt_order;
 	ret->n=n;
 	ret->registered_funciton=registered_function;
 	return ret;
