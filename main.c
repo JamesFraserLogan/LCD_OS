@@ -8,6 +8,17 @@ int main(void)
 	screen *serial0=makescreen(2,"*****SERIAL*****","1:STREAM 2:STOP ");
 	screen *units0=makescreen(2,"******UNITS*****","1:C     2:F     ");
 	screen *units1=makescreen(2,"3:K     4:µK    ","****************");
+	registered_function *regtestcalib=register_function(testcalib);
+	registered_function *regtestvolts=register_function(testvolts);
+	registered_function *regtestfc=register_function(testfc);
+	registered_function *regteststream=register_function(teststream);
+	registered_function *regteststop=register_function(teststop);
+	registered_function *regtestc=register_function(testc);
+	registered_function *regtestf=register_function(testf);
+	registered_function *regtestk=register_function(testk);
+	registered_function *regtestuk=register_function(testuk);
+
+
 	printf("%s\n",menu0->line[0]);
 	printf("%s\n",menu0->line[1]);
 	printf("%s\n",menu1->line[0]);
@@ -22,7 +33,11 @@ int main(void)
 	printf("%s\n",units0->line[1]);
 	printf("%s\n",units1->line[0]);
 	printf("%s\n",units1->line[1]);
-	node *units=makenode(bundle_screen(2,units0,units1),NULL,2,0,4,makenodereg(order_opts(4,NULL),0,NULL));
+	node *units=makenode(bundle_screen(2,units0,units1),NULL,2,0,4,makenodereg(order_opts(4,"1111"),4,bundle_registered_functions(4,regtestc,regtestf,regtestk,regtestuk)));
+
+
+
+
 	printf("terminal nodes\n");
 	printf("%s\n",units->screen[0]->line[0]);
 	printf("%s\n",units->screen[0]->line[1]);
@@ -58,6 +73,10 @@ int main(void)
 	printf("%s\n",menu->node[2]->screen[0]->line[0]);
 	printf("%s\n",menu->node[2]->screen[0]->line[1]);
 
+	units->node_registry->registered_funciton[0]->function();
+	units->node_registry->registered_funciton[1]->function();
+	units->node_registry->registered_funciton[2]->function();
+	units->node_registry->registered_funciton[3]->function();
 
 	return 0;
 }

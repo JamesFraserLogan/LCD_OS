@@ -8,21 +8,6 @@ volatile size_t screen_count=0; // This is "i" in: RootNode->node[a1]->...->node
 volatile size_t line_count=0; // This is "j" in: RootNode->node[a1]->...->node[an]->screen[i]->line[j] ; that is, this is which line you are on in a particular screen in a particular node.
 volatile size_t *node_indices; // This is the array of node index coefficients {a1,a2,a3,...,an} in the above example.
 volatile size_t opt_counter=0; // This is which option you are on in any particular node. Registered functions can be attached to options.
-typedef struct node // Links to i other nodes, j screens, and k functional options. Functional options can invoke a function via the node registry, or link to another node and/or screen.
-{
-	struct node **node;
-	struct node_registry *node_registry;
-	struct screen **screen;	
-	size_t nnodes;
-	size_t nopts;
-	size_t nscreens;
-}node;
-typedef struct node_registry // Links to n registered functions to be invoked in a specific node. The order array is 0 for node navigation, and 1 for function invocation, thus functions must be properly ordered.
-{
-	struct registered_function **registered_funciton;
-	size_t n;
-	unsigned char *opt_order;
-}node_registry;
 typedef struct registered_function // Prepares void functions with void arguments to be inserted into a node registry.
 {
 	void (*function)(void);
@@ -32,14 +17,33 @@ typedef struct screen // Each screen contains n lines of (possibly) variable len
 	char **line;
 	size_t n;
 }screen;
+typedef struct node_registry // Links to n registered functions to be invoked in a specific node. The order array is 0 for node navigation, and 1 for function invocation, thus functions must be properly ordered.
+{
+	struct registered_function **registered_funciton;
+	size_t n;
+	char *opt_order;
+}node_registry;
+typedef struct node // Links to i other nodes, j screens, and k functional options. Functional options can invoke a function via the node registry, or link to another node and/or screen.
+{
+	struct node **node;
+	struct node_registry *node_registry;
+	struct screen **screen;	
+	size_t nnodes;
+	size_t nopts;
+	size_t nscreens;
+}node;
+
+
+
+
 struct node **bundle_node(size_t n,struct node *node,...); // Bundles n nodes into a single **node. Returns NULL on error.
 struct registered_function **bundle_registered_functions(size_t n,struct registered_function *function,...); // Bundles n registered functions into a single **registered_function. Returns NULL on error.
 struct screen **bundle_screen(size_t n,struct screen *screen,...); //Bundles n screens into a single **screen. Returns Null on error.
 struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,size_t nnodes,size_t nopts,struct node_registry *reg); // Returns a *node. Feel free to use NULL as an input to any **node, but do not use NULL as an input to **screen. Each node must have at least one screen. Returns NULL on error.
-struct node_registry *makenodereg(unsigned char *opt_order,size_t n,registered_function **registered_function); // Returns a *node_registry. Returns NULL on error.
+struct node_registry *makenodereg(char *opt_order,size_t n,registered_function **registered_function); // Returns a *node_registry. Returns NULL on error.
 struct screen *makescreen(size_t n,char *line,...); // Returns a *screen. Empty screens are not allowed. Returns NULL on error.
 void node_depth_up(struct node **node,size_t index); // Sequential function that increases node depth. Only use this starting from the root node and building up to n node depth. Use "&mynode" as input, not a bundle, as C funcitons pass by value thus a **node input allows this function to modify the target *node. Simple function with no error checking, BE CAREFUL!
-unsigned char *order_opts(size_t nopts,char *bin_sem); // Returns a binary semaphore arrary with '0's for node navigation and '1's for functions, thus ordering the options in each node structure.
+char *order_opts(size_t nopts,char *bin_sem); // Returns a binary semaphore arrary with '0's for node navigation and '1's for functions, thus ordering the options in each node structure.
 struct registered_function *register_function(void (*function)(void)); // Returns a registered_function * to a void function with void arguments.
 struct node **bundle_node(size_t n,struct node *node,...)
 {
@@ -77,9 +81,10 @@ struct registered_function **bundle_registered_functions(size_t n,struct registe
 	{
 		return NULL;
 	}
+	*ret=function;
 	va_list ap;
 	va_start(ap,function);
-	for(size_t i=0;i<n;i++)
+	for(size_t i=1;i<n;i++)
 	{
 		*(ret+i)=va_arg(ap,struct registered_function *);
 		if(*(ret+i)==NULL)
@@ -142,12 +147,8 @@ struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,
 	ret->node_registry=reg;
 	return ret;
 }
-struct node_registry *makenodereg(unsigned char *opt_order,size_t n,registered_function **registered_function)
+struct node_registry *makenodereg(char *opt_order,size_t n,registered_function **registered_function)
 {
-	if(n<0) // incase one wants to swap out all size_t variables with ints or other signed variables
-	{
-		return NULL;
-	}
 	struct node_registry *ret=(struct node_registry *)malloc(sizeof(struct node_registry));
 	if(ret==NULL)
 	{
@@ -203,13 +204,13 @@ void node_depth_up(struct node **node,size_t index)
 {
 	*node=(*node)->node[index];
 }
-unsigned char *order_opts(size_t nopts,char *bin_sem)
+char *order_opts(size_t nopts,char *bin_sem)
 {
 	if(nopts==0)
 	{
 		return NULL;
 	}
-	unsigned char *ret=(unsigned char *)malloc((1+nopts)*sizeof(unsigned char));
+	char *ret=(char *)malloc((1+nopts)*sizeof(char));
 	if(ret==NULL)
 	{
 		return NULL;
@@ -242,7 +243,7 @@ unsigned char *order_opts(size_t nopts,char *bin_sem)
 	}
 	return ret;
 }
-struct registered_function *register_function(void (*function)(void))
+struct registered_function *register_function(void(*function)(void))
 {
 	if(function==NULL)
 	{
@@ -259,4 +260,40 @@ struct registered_function *register_function(void (*function)(void))
 void testvoid(void)
 {
 	printf("testvoid\n");
+}
+void testcalib (void)
+{
+	printf("testcalib\n");
+}
+void testvolts(void)
+{
+	printf("testvolts\n");
+}
+void testfc(void)
+{
+	printf("testfc\n");
+}
+void teststream(void)
+{
+	printf("teststream\n");
+}
+void teststop(void)
+{
+	printf("teststop\n");
+}
+void testc(void)
+{
+	printf("testc\n");
+}
+void testf(void)
+{
+	printf("testf\n");
+}
+void testk(void)
+{
+	printf("testk\n");
+}
+void testuk(void)
+{
+	printf("testuk\n");
 }
