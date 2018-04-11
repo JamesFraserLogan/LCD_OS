@@ -19,9 +19,9 @@ typedef struct screen // Each screen contains n lines of (possibly) variable len
 }screen;
 typedef struct node_registry // Links to n registered functions to be invoked in a specific node. The order array is 0 for node navigation, and 1 for function invocation, thus functions must be properly ordered.
 {
-	struct registered_function **registered_funciton;
 	size_t n;
 	char *opt_order;
+	struct registered_function **registered_funciton;
 }node_registry;
 typedef struct node // Links to i other nodes, j screens, and k functional options. Functional options can invoke a function via the node registry, or link to another node and/or screen.
 {
@@ -32,10 +32,6 @@ typedef struct node // Links to i other nodes, j screens, and k functional optio
 	size_t nopts;
 	size_t nscreens;
 }node;
-
-
-
-
 struct node **bundle_node(size_t n,struct node *node,...); // Bundles n nodes into a single **node. Returns NULL on error.
 struct registered_function **bundle_registered_functions(size_t n,struct registered_function *function,...); // Bundles n registered functions into a single **registered_function. Returns NULL on error.
 struct screen **bundle_screen(size_t n,struct screen *screen,...); //Bundles n screens into a single **screen. Returns Null on error.
@@ -45,13 +41,17 @@ struct screen *makescreen(size_t n,char *line,...); // Returns a *screen. Empty 
 void node_depth_up(struct node **node,size_t index); // Sequential function that increases node depth. Only use this starting from the root node and building up to n node depth. Use "&mynode" as input, not a bundle, as C funcitons pass by value thus a **node input allows this function to modify the target *node. Simple function with no error checking, BE CAREFUL!
 char *order_opts(size_t nopts,char *bin_sem); // Returns a binary semaphore arrary with '0's for node navigation and '1's for functions, thus ordering the options in each node structure.
 struct registered_function *register_function(void (*function)(void)); // Returns a registered_function * to a void function with void arguments.
+void testc(void);
+void testf(void);
+void testk(void);
+void teestuk(void);
 struct node **bundle_node(size_t n,struct node *node,...)
 {
 	if(n<=0||node==NULL)
 	{
 		return NULL;
 	}
-	struct node **ret=(struct node **)malloc(sizeof(struct node *));
+	struct node **ret=(struct node **)malloc(n*sizeof(struct node *));
 	if(ret==NULL)
 	{
 		return NULL;
@@ -76,7 +76,7 @@ struct registered_function **bundle_registered_functions(size_t n,struct registe
 	{
 		return NULL;
 	}
-	struct registered_function **ret=(struct registered_function **)malloc(sizeof(struct registered_function *));
+	struct registered_function **ret=(struct registered_function **)malloc(n*sizeof(struct registered_function *));
 	if(ret==NULL)
 	{
 		return NULL;
@@ -101,7 +101,7 @@ struct screen **bundle_screen(size_t n,struct screen *screen,...)
 	{
 		return NULL;
 	}
-	struct screen **ret=(struct screen **)malloc(sizeof(struct screen *));
+	struct screen **ret=(struct screen **)malloc(n*sizeof(struct screen *));
 	if(ret==NULL)
 	{
 		return NULL;
@@ -134,7 +134,7 @@ struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,
 	{
 		return NULL;
 	}
-	struct node *ret=(struct node *)malloc(sizeof(struct node));
+	struct node *ret=(struct node *)malloc(nnodes*sizeof(struct node));
 	if(ret==NULL)
 	{
 		return NULL;
@@ -149,7 +149,7 @@ struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,
 }
 struct node_registry *makenodereg(char *opt_order,size_t n,registered_function **registered_function)
 {
-	struct node_registry *ret=(struct node_registry *)malloc(sizeof(struct node_registry));
+	struct node_registry *ret=(struct node_registry *)malloc(n*sizeof(struct node_registry));
 	if(ret==NULL)
 	{
 		return NULL;
@@ -170,7 +170,7 @@ struct screen *makescreen(size_t n,char *line,...)
 	{
 		return NULL;
 	}
-	char **arr=(char **)malloc(sizeof(char *));
+	char **arr=(char **)malloc(n*sizeof(char *));
 	if(arr==NULL)
 	{
 		return NULL;
