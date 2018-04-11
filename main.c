@@ -1,4 +1,23 @@
 #include "local.h"
+
+#define MAC(i) char *line##i = (char *)malloc(17);\
+if(line##i == NULL){\
+	printf("malloc error");}\
+_itoa(i,temp,10);\
+		j=0;\
+		while(*(temp+j)!='\0')\
+		{\
+			*(line##i+j)=*(temp+j);\
+			j++;\
+		}\
+		for(;j<16;j++)\
+		{\
+			*(line##i+j)='a';\
+		}\
+		*(line##i+16)='\0';
+		
+
+
 int main(void)
 {
 	screen *menu0= makescreen(2,"******MENU******","1:TEMP  2:LIGHT ");
@@ -43,14 +62,14 @@ int main(void)
 	printf("%s\n",units->screen[0]->line[1]);
 	printf("%s\n",units->screen[1]->line[0]);
 	printf("%s\n",units->screen[1]->line[1]);
-	node *serial=makenode(&serial0,NULL,1,0,2,makenodereg(order_opts(2,NULL),0,NULL));
+	node *serial=makenode(&serial0,NULL,1,0,2,makenodereg(order_opts(2,"11"),2,bundle_registered_functions(2,regteststream,regteststop)));
 	printf("%s\n",serial->screen[0]->line[0]);
 	printf("%s\n",serial->screen[0]->line[1]);
-	node *light=makenode(&light0,NULL,1,0,2,makenodereg(order_opts(2,NULL),0,NULL));
+	node *light=makenode(&light0,NULL,1,0,2,makenodereg(order_opts(2,"11"),2,bundle_registered_functions(2,regtestvolts,regtestfc)));
 	printf("%s\n",light->screen[0]->line[0]);
 	printf("%s\n",light->screen[0]->line[1]);
 	printf("non terminal nodes\n");
-	node *temp=makenode(&temp0,bundle_node(1,units),1,1,2,makenodereg(order_opts(2,NULL),0,NULL));
+	node *temp=makenode(&temp0,bundle_node(1,units),1,1,2,makenodereg(order_opts(2,"01"),1,bundle_registered_functions(1,regtestcalib)));
 	printf("%s\n",temp->screen[0]->line[0]);
 	printf("%s\n",temp->screen[0]->line[1]);
 	printf("%s\n",temp->node[0]->screen[0]->line[0]);
@@ -77,6 +96,10 @@ int main(void)
 	units->node_registry->registered_funciton[1]->function();
 	units->node_registry->registered_funciton[2]->function();
 	units->node_registry->registered_funciton[3]->function();
-
+	serial->node_registry->registered_funciton[0]->function();
+	serial->node_registry->registered_funciton[1]->function();
+	light->node_registry->registered_funciton[0]->function();
+	light->node_registry->registered_funciton[1]->function();
+	temp->node_registry->registered_funciton[0]->function();
 	return 0;
 }
