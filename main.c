@@ -101,5 +101,20 @@ int main(void)
 	light->node_registry->registered_funciton[0]->function();
 	light->node_registry->registered_funciton[1]->function();
 	temp->node_registry->registered_funciton[0]->function();
+
+	menu->node[0]->node_registry->registered_funciton[0]->function(); // temp node
+	menu->node[0]->node[0]->node_registry->registered_funciton[0]->function(); // temp -> units node
+	menu->node[0]->node[0]->node_registry->registered_funciton[1]->function(); // temp -> units node
+	menu->node[0]->node[0]->node_registry->registered_funciton[2]->function(); // temp -> units node
+	menu->node[0]->node[0]->node_registry->registered_funciton[3]->function(); // temp -> units node
+	menu->node[1]->node_registry->registered_funciton[0]->function(); // light node
+	menu->node[1]->node_registry->registered_funciton[1]->function(); // light node
+	menu->node[2]->node_registry->registered_funciton[0]->function(); // serial node
+	menu->node[2]->node_registry->registered_funciton[1]->function(); // serial node
+
+
+
+
+
 	return 0;
 }

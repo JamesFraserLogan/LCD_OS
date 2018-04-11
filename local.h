@@ -8,21 +8,6 @@ volatile size_t screen_count=0; // This is "i" in: RootNode->node[a1]->...->node
 volatile size_t line_count=0; // This is "j" in: RootNode->node[a1]->...->node[an]->screen[i]->line[j] ; that is, this is which line you are on in a particular screen in a particular node.
 volatile size_t *node_indices; // This is the array of node index coefficients {a1,a2,a3,...,an} in the above example.
 volatile size_t opt_counter=0; // This is which option you are on in any particular node. Registered functions can be attached to options.
-typedef struct registered_function // Prepares void functions with void arguments to be inserted into a node registry.
-{
-	void (*function)(void);
-}registered_function;
-typedef struct screen // Each screen contains n lines of (possibly) variable length.
-{
-	char **line;
-	size_t n;
-}screen;
-typedef struct node_registry // Links to n registered functions to be invoked in a specific node. The order array is 0 for node navigation, and 1 for function invocation, thus functions must be properly ordered.
-{
-	size_t n;
-	char *opt_order;
-	struct registered_function **registered_funciton;
-}node_registry;
 typedef struct node // Links to i other nodes, j screens, and k functional options. Functional options can invoke a function via the node registry, or link to another node and/or screen.
 {
 	struct node **node;
@@ -32,6 +17,21 @@ typedef struct node // Links to i other nodes, j screens, and k functional optio
 	size_t nopts;
 	size_t nscreens;
 }node;
+typedef struct node_registry // Links to n registered functions to be invoked in a specific node. The order array is 0 for node navigation, and 1 for function invocation, thus functions must be properly ordered.
+{
+	size_t n;
+	char *opt_order;
+	struct registered_function **registered_funciton;
+}node_registry;
+typedef struct registered_function // Prepares void functions with void arguments to be inserted into a node registry.
+{
+	void (*function)(void);
+}registered_function;
+typedef struct screen // Each screen contains n lines of (possibly) variable length.
+{
+	char **line;
+	size_t n;
+}screen;
 struct node **bundle_node(size_t n,struct node *node,...); // Bundles n nodes into a single **node. Returns NULL on error.
 struct registered_function **bundle_registered_functions(size_t n,struct registered_function *function,...); // Bundles n registered functions into a single **registered_function. Returns NULL on error.
 struct screen **bundle_screen(size_t n,struct screen *screen,...); //Bundles n screens into a single **screen. Returns Null on error.
