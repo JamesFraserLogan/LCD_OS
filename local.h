@@ -21,7 +21,7 @@ typedef struct node_registry // Links to n registered functions to be invoked in
 {
   size_t n;
   char *opt_order;
-  struct registered_function **registered_funciton;
+  struct registered_function **registered_function;
 }node_registry;
 typedef struct registered_function // Prepares void functions with void arguments to be inserted into a node registry.
 {
@@ -156,7 +156,7 @@ struct node_registry *makenodereg(char *opt_order,size_t n,registered_function *
   }
   ret->opt_order=opt_order;
   ret->n=n;
-  ret->registered_funciton=registered_function;
+  ret->registered_function=registered_function;
   return ret;
 }
 struct screen *makescreen(size_t n,char *line,...)
@@ -297,6 +297,10 @@ void testuk(void)
 {
   printf("testuk\n");
 }
+void dummy(void)
+{
+  return;
+}
 screen *menu0= makescreen(2,"******MENU******","1:TEMP  2:LIGHT ");
 screen *menu1= makescreen(2,"3:SERIAL CONFIG ","****************");
 screen *temp0=  makescreen(2,"******TEMP******","1:UNITS 2:CALIB ");
@@ -313,9 +317,11 @@ registered_function *regtestc=register_function(testc);
 registered_function *regtestf=register_function(testf);
 registered_function *regtestk=register_function(testk);
 registered_function *regtestuk=register_function(testuk);
+registered_function *regdummy=register_function(dummy);
 node *units=makenode(bundle_screen(2,units0,units1),NULL,2,0,4,makenodereg(order_opts(4,"1111"),4,bundle_registered_functions(4,regtestc,regtestf,regtestk,regtestuk)));
 node *serial=makenode(&serial0,NULL,1,0,2,makenodereg(order_opts(2,"11"),2,bundle_registered_functions(2,regteststream,regteststop)));
 node *light=makenode(&light0,NULL,1,0,2,makenodereg(order_opts(2,"11"),2,bundle_registered_functions(2,regtestvolts,regtestfc)));
 node *temp=makenode(&temp0,bundle_node(1,units),1,1,2,makenodereg(order_opts(2,"01"),1,bundle_registered_functions(1,regtestcalib)));
 node *menu=makenode(bundle_screen(2,menu0,menu1),bundle_node(3,temp,light,serial),2,3,3,makenodereg(order_opts(3,NULL),0,NULL));
 node *root=menu;
+registered_function *executable
