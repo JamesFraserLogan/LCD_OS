@@ -297,31 +297,3 @@ void testuk(void)
 {
   printf("testuk\n");
 }
-void dummy(void)
-{
-  return;
-}
-screen *menu0= makescreen(2,"******MENU******","1:TEMP  2:LIGHT ");
-screen *menu1= makescreen(2,"3:SERIAL CONFIG ","****************");
-screen *temp0=  makescreen(2,"******TEMP******","1:UNITS 2:CALIB ");
-screen *light0= makescreen(2,"******LIGHT*****","1:VOLTS 2:FC    ");
-screen *serial0=makescreen(2,"*****SERIAL*****","1:STREAM 2:STOP ");
-screen *units0=makescreen(2,"******UNITS*****","1:C     2:F     ");
-screen *units1=makescreen(2,"3:K     4:µK    ","****************");
-registered_function *regtestcalib=register_function(testcalib);
-registered_function *regtestvolts=register_function(testvolts);
-registered_function *regtestfc=register_function(testfc);
-registered_function *regteststream=register_function(teststream);
-registered_function *regteststop=register_function(teststop);
-registered_function *regtestc=register_function(testc);
-registered_function *regtestf=register_function(testf);
-registered_function *regtestk=register_function(testk);
-registered_function *regtestuk=register_function(testuk);
-registered_function *regdummy=register_function(dummy);
-node *units=makenode(bundle_screen(2,units0,units1),NULL,2,0,4,makenodereg(order_opts(4,"1111"),4,bundle_registered_functions(4,regtestc,regtestf,regtestk,regtestuk)));
-node *serial=makenode(&serial0,NULL,1,0,2,makenodereg(order_opts(2,"11"),2,bundle_registered_functions(2,regteststream,regteststop)));
-node *light=makenode(&light0,NULL,1,0,2,makenodereg(order_opts(2,"11"),2,bundle_registered_functions(2,regtestvolts,regtestfc)));
-node *temp=makenode(&temp0,bundle_node(1,units),1,1,2,makenodereg(order_opts(2,"01"),1,bundle_registered_functions(1,regtestcalib)));
-node *menu=makenode(bundle_screen(2,menu0,menu1),bundle_node(3,temp,light,serial),2,3,3,makenodereg(order_opts(3,NULL),0,NULL));
-node *root=menu;
-registered_function *executable

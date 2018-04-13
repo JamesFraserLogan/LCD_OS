@@ -92,25 +92,27 @@ int main(void)
 	printf("%s\n",menu->node[2]->screen[0]->line[0]);
 	printf("%s\n",menu->node[2]->screen[0]->line[1]);
 
-	units->node_registry->registered_funciton[0]->function();
-	units->node_registry->registered_funciton[1]->function();
-	units->node_registry->registered_funciton[2]->function();
-	units->node_registry->registered_funciton[3]->function();
-	serial->node_registry->registered_funciton[0]->function();
-	serial->node_registry->registered_funciton[1]->function();
-	light->node_registry->registered_funciton[0]->function();
-	light->node_registry->registered_funciton[1]->function();
-	temp->node_registry->registered_funciton[0]->function();
+	units->node_registry->registered_function[0]->function();
+	units->node_registry->registered_function[1]->function();
+	units->node_registry->registered_function[2]->function();
+	units->node_registry->registered_function[3]->function();
+	serial->node_registry->registered_function[0]->function();
+	serial->node_registry->registered_function[1]->function();
+	light->node_registry->registered_function[0]->function();
+	light->node_registry->registered_function[1]->function();
+	temp->node_registry->registered_function[0]->function();
 
-	menu->node[0]->node_registry->registered_funciton[0]->function(); // temp node
-	menu->node[0]->node[0]->node_registry->registered_funciton[0]->function(); // temp -> units node
-	menu->node[0]->node[0]->node_registry->registered_funciton[1]->function(); // temp -> units node
-	menu->node[0]->node[0]->node_registry->registered_funciton[2]->function(); // temp -> units node
-	menu->node[0]->node[0]->node_registry->registered_funciton[3]->function(); // temp -> units node
-	menu->node[1]->node_registry->registered_funciton[0]->function(); // light node
-	menu->node[1]->node_registry->registered_funciton[1]->function(); // light node
-	menu->node[2]->node_registry->registered_funciton[0]->function(); // serial node
-	menu->node[2]->node_registry->registered_funciton[1]->function(); // serial node
+	menu->node[0]->node_registry->registered_function[0]->function(); // temp node
+	menu->node[0]->node[0]->node_registry->registered_function[0]->function(); // temp -> units node
+	menu->node[0]->node[0]->node_registry->registered_function[1]->function(); // temp -> units node
+	menu->node[0]->node[0]->node_registry->registered_function[2]->function(); // temp -> units node
+	menu->node[0]->node[0]->node_registry->registered_function[3]->function(); // temp -> units node
+	menu->node[1]->node_registry->registered_function[0]->function(); // light node
+	menu->node[1]->node_registry->registered_function[1]->function(); // light node
+	menu->node[2]->node_registry->registered_function[0]->function(); // serial node
+	menu->node[2]->node_registry->registered_function[1]->function(); // serial node
+
+	printf("\nsem array is %c",menu->node_registry->opt_order[0]); 
 
 
 
