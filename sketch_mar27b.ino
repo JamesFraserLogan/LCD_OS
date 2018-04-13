@@ -51,21 +51,19 @@ void loop()
     lcd.cursor();
     lcd.blink();
 
-     if(digitalRead(but_up)==HIGH)
+    if(digitalRead(but_up)==HIGH)
     {
       menu_counter=0;
       Serial.println(cursor_state);
       if(cursor_state<((root->nopts)-1))
       {
         cursor_state++;
-        if(cursor_state==2)
+        if(cursor_state==2||cursor_state>2&&(cursor_state%4)==2)
         {
           screen_count++;
         }
-      }
-      
+      }      
       delay(50);
-      Serial.println(cursor_state);
     }
     else if(digitalRead(but_down)==HIGH)
     {
@@ -74,14 +72,12 @@ void loop()
       if(cursor_state>0)
       {
         cursor_state--;
-        if(cursor_state==1)
+        if(cursor_state==1||cursor_state>2&&(cursor_state%4)==2)
         {
           screen_count--;
         }
-      }
-      
+      }      
       delay(50);
-      Serial.println(cursor_state);
     }
 
 
