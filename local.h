@@ -20,7 +20,7 @@ typedef struct node // Links to i other nodes, j screens, and k functional optio
 typedef struct node_registry // Links to n registered functions to be invoked in a specific node. The order array is 0 for node navigation, and 1 for function invocation, thus functions must be properly ordered.
 {
   size_t n;
-  char *opt_order;
+  unsigned char *opt_order;
   struct registered_function **registered_function;
 }node_registry;
 typedef struct registered_function // Prepares void functions with void arguments to be inserted into a node registry.
@@ -36,10 +36,10 @@ struct node **bundle_node(size_t n,struct node *node,...); // Bundles n nodes in
 struct registered_function **bundle_registered_functions(size_t n,struct registered_function *function,...); // Bundles n registered functions into a single **registered_function. Returns NULL on error.
 struct screen **bundle_screen(size_t n,struct screen *screen,...); //Bundles n screens into a single **screen. Returns Null on error.
 struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,size_t nnodes,size_t nopts,struct node_registry *reg); // Returns a *node. Feel free to use NULL as an input to any **node, but do not use NULL as an input to **screen. Each node must have at least one screen. Returns NULL on error.
-struct node_registry *makenodereg(char *opt_order,size_t n,registered_function **registered_function); // Returns a *node_registry. Returns NULL on error.
+struct node_registry *makenodereg(unsigned char *opt_order,size_t n,registered_function **registered_function); // Returns a *node_registry. Returns NULL on error.
 struct screen *makescreen(size_t n,char *line,...); // Returns a *screen. Empty screens are not allowed. Returns NULL on error.
 void node_depth_up(struct node **node,size_t index); // Sequential function that increases node depth. Only use this starting from the root node and building up to n node depth. Use "&mynode" as input, not a bundle, as C funcitons pass by value thus a **node input allows this function to modify the target *node. Simple function with no error checking, BE CAREFUL!
-char *order_opts(size_t nopts,char *bin_sem); // Returns a binary semaphore arrary with '0's for node navigation and '1's for functions, thus ordering the options in each node structure.
+unsigned char *order_opts(size_t nopts,char *bin_sem); // Returns a binary semaphore arrary with '0's for node navigation and '1's for functions, thus ordering the options in each node structure.
 struct registered_function *register_function(void (*function)(void)); // Returns a registered_function * to a void function with void arguments.
 void testc(void);
 void testf(void);
@@ -134,7 +134,7 @@ struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,
   {
     return NULL;
   }
-  struct node *ret=(struct node *)malloc(nnodes*sizeof(struct node));
+  struct node *ret=(struct node *)malloc(sizeof(struct node));
   if(ret==NULL)
   {
     return NULL;
@@ -147,9 +147,9 @@ struct node *makenode(struct screen **screen,struct node **node,size_t nscreens,
   ret->node_registry=reg;
   return ret;
 }
-struct node_registry *makenodereg(char *opt_order,size_t n,registered_function **registered_function)
+struct node_registry *makenodereg(unsigned char *opt_order,size_t n,registered_function **registered_function)
 {
-  struct node_registry *ret=(struct node_registry *)malloc(n*sizeof(struct node_registry));
+  struct node_registry *ret=(struct node_registry *)malloc(sizeof(struct node_registry));
   if(ret==NULL)
   {
     return NULL;
@@ -204,13 +204,13 @@ void node_depth_up(struct node **node,size_t index)
 {
   *node=(*node)->node[index];
 }
-char *order_opts(size_t nopts,char *bin_sem)
+unsigned char *order_opts(size_t nopts,char *bin_sem)
 {
   if(nopts==0)
   {
     return NULL;
   }
-  char *ret=(char *)malloc((1+nopts)*sizeof(char));
+  unsigned char *ret=(unsigned char *)malloc((1+nopts)*sizeof(unsigned char));
   if(ret==NULL)
   {
     return NULL;
