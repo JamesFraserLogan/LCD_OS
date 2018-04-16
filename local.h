@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-volatile size_t node_depth=0; // RootNode->node[a1]->node->[a2]->....->node[an] is the topology this counter follows. A node depth of 0 denotes the root node.
+volatile size_t node_depth=2; // RootNode->node[a1]->node->[a2]->....->node[an] is the topology this counter follows. A node depth of 0 denotes the root node.
 volatile size_t max_node_depth=0; // Be careful this is set correctly, it's used to determine how much memory is alloacated to the node_indices array. This would be n in the above example.
 volatile size_t screen_count=0; // This is "i" in: RootNode->node[a1]->...->node[an]->screen[i] ; that is, this is which screen you are on in a particular node.
 volatile size_t line_count=0; // This is "j" in: RootNode->node[a1]->...->node[an]->screen[i]->line[j] ; that is, this is which line you are on in a particular screen in a particular node.
@@ -259,41 +259,42 @@ struct registered_function *register_function(void(*function)(void))
 }
 void testvoid(void)
 {
-  printf("testvoid\n");
+  Serial.println("testvoid");
 }
 void testcalib (void)
 {
-  printf("testcalib\n");
+  Serial.println("testcalib");
 }
 void testvolts(void)
 {
-  printf("testvolts\n");
+  Serial.println("testvolts");
 }
 void testfc(void)
 {
-  printf("testfc\n");
+  Serial.println("testfc");
 }
 void teststream(void)
 {
-  printf("teststream\n");
+  Serial.println("teststream");
 }
 void teststop(void)
 {
-  printf("teststop\n");
+  Serial.println("teststop");
 }
 void testc(void)
 {
-  printf("testc\n");
+  Serial.println("testc");
 }
 void testf(void)
 {
-  printf("testf\n");
+  Serial.println("testf");
 }
 void testk(void)
 {
-  printf("testk\n");
+  Serial.println("testk");
 }
 void testuk(void)
 {
-  printf("testuk\n");
+  Serial.println("testuk");
 }
+

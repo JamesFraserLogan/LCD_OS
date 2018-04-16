@@ -1,7 +1,6 @@
 #include <LiquidCrystal.h>
 #include "local.h"
 #include "init.h"
-
 const int tp=A0; // temp probe
 const int lp=A2; // light probe
 const int d7=13; // d4-d7 are LCD pins
@@ -31,6 +30,7 @@ void display_temp_light(void);
 LiquidCrystal lcd(rs,enable,d4,d5,d6,d7);
 void setup()
 {
+  node_indices=(size_t *)calloc(max_node_depth,sizeof(size_t));
   attachInterrupt(digitalPinToInterrupt(but_menu),call_menu,RISING);
   Serial.begin(9600);
   lcd.begin(16,2);
@@ -41,7 +41,6 @@ void setup()
   lcd.print("Setup complete.");
   delay(1000);
   lcd.clear();
-
 }
 void loop()
 {  
@@ -53,7 +52,6 @@ void loop()
     cursor_pos(cursor_state);
     lcd.cursor();
     lcd.blink();
-
     if(digitalRead(but_up)==HIGH)
     {
       menu_counter=0;
@@ -84,27 +82,48 @@ void loop()
     }
     else if(digitalRead(but_enter)==HIGH)
     {
-      Serial.println(root->node_registry->opt_order[0]);
-      if(root->node_registry->opt_order[cursor_state+1]=='1')
+      menu_counter=0;
+      if(root->node_registry->opt_order[cursor_state]=='1')
       {
-        root->node_registry->registered_function[cursor_state+1]->function();
-        Serial.println("schlip schloop");
+        size_t counter=0;
+        for(size_t i=0;i<=cursor_state;i++)
+        {
+          if(root->node_registry->opt_order[i]=='1')
+          {
+            counter ++;
+          }
+        }
+        root->node_registry->registered_function[counter-1]->function();
       }
-      else if(root->node_registry->opt_order[cursor_state+1]=='0')
+      else if(root->node_registry->opt_order[cursor_state]=='0')
       {
-        node_depth_up(&root,cursor_state+1);
+        node_depth_up(&root,cursor_state);
         node_depth++;
-        Serial.println("snip snopp");
+        cursor_state=0;
+        screen_count=0;
+        *(node_indices+node_depth)=cursor_state;
       }
       delay(70);
     }
-
-    
+    else if(digitalRead(but_back)==HIGH)
+    {
+      menu_counter=0;
+      if(node_depth>0)
+      {
+        
+        
+        cursor_state=0;
+        screen_count=0;
+        node_depth--;
+        root=menu;
+        for(size_t i=0;i<node_depth;i++)
+        {
+          node_depth_up(&root,i);
+        }        
+      }
+      delay(70);
+    }    
     delay(menu_cycle_length);
-
-
-
-    
     if(menu_counter>=menu_maxcount)
     {
       menu_counter=0;
@@ -112,27 +131,7 @@ void loop()
       break;
     }
     menu_counter++;    
-  }
-  /*if(digitalRead(but_up)==HIGH) // for testing buttons
-  {
-    Serial.println("but_up");
-  }
-  if(digitalRead(but_down)==HIGH)
-  {
-    Serial.println("but_down");
-  }
-    if(digitalRead(but_enter)==HIGH)
-  {
-    Serial.println("but_enter");
-  }
-    if(digitalRead(but_menu)==HIGH)
-  {
-    Serial.println("but_menu");
-  }
-    if(digitalRead(but_back)==HIGH)
-  {
-    Serial.println("but_back");
-  }*/
+  } 
   lcd.noBlink();
   lcd.noCursor();
   delay(cycle_length);
@@ -144,6 +143,7 @@ void call_menu(void)
   node_depth=0;
   screen_count=0;
   cursor_state=0;
+  root=menu;
 }
 void cursor_pos(int i)
 {
@@ -196,5 +196,3 @@ void display_temp_light(void)
   lcd.print(light_reading);
   lcd.print("FC");
 }
-
-
