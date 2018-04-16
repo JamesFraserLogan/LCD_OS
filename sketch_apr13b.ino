@@ -1,33 +1,10 @@
 #include <LiquidCrystal.h>
+#include "os_class.h"
 #include "local.h"
-#include "init.h"
-const int tp=A0; // temp probe
-const int lp=A2; // light probe
-const int d7=13; // d4-d7 are LCD pins
-const int d6=12;
-const int d5=11;
-const int d4=10;
-const int enable=9; // enable pin on LCD
-const int rs=8; // rs pin on LCD
-const int but_up=7; // up down enter back are nav buttons
-const int but_down=6;
-const int but_enter=5;
-const int but_back=4;
-const int but_menu=2; // interrupt pin to engage menu
-volatile int light_reading=0; // variable to store light sensor reading
-volatile int temp_reading=0; // variable to store temperature sensor reading
-volatile bool menu_state=0; // menu state semaphore for menu mode via an interrupt pin
-volatile int cursor_state=0; // cursor state semaphore; the menu items should have a blinking cursor on them for human readability. Also equals which opt your are on -1
-const size_t cycle_length=300; // cycle length in ms for refreshing a LCD so it looks nice, in ms
-volatile size_t menu_counter=0; // counter to ensure menu times out in menu_duration ms, and is reset whenever a nav button is pressed
-const size_t menu_cycle_length=100; // menu cycle length so it looks nice, in ms
-const size_t menu_duration=5000; // menu duration (time until it leaves menu mode) in ms
-const size_t menu_maxcount=menu_duration/menu_cycle_length; // trickery to invoker a timer in interrupt mode
-void call_menu(void);
-void cursor_pos(int i);
-void display_screen(void);
-void display_temp_light(void);
-LiquidCrystal lcd(rs,enable,d4,d5,d6,d7);
+void call_menu(void); // Interrupt function to engage menu mode.
+void cursor_pos(int i); // Function to properly allign the blinking cursor in this specific 16x2 implementation.
+void display_screen(void); // Function to display data when the menu mode is engaged.
+void display_temp_light(void); // Function to display data when the menu mode is not engaged.
 void setup()
 {
   node_indices=(size_t *)calloc(max_node_depth,sizeof(size_t));
@@ -186,13 +163,45 @@ void display_screen(void)
 void display_temp_light(void)
 {
   light_reading=analogRead(lp);
-  temp_reading=analogRead(tp);
+  temp_reading=analogRead(tp)+offset;
   lcd.setCursor(0,0);
   lcd.print("   Temp:");
-  lcd.print(temp_reading);
-  lcd.print("C");
+  if(celcius)
+  {
+    temp_reading=((temp_reading*3.3/1023.0)-0.33)*100.0;
+    lcd.print(temp_reading);
+    lcd.print("C");
+  }
+  else if(farenheight)
+  {
+    temp_reading=((temp_reading*3.3/1023.0)-0.33)*180.0+32.0;
+    lcd.print(temp_reading);
+    lcd.print("F");
+  }
+  else if(kelvin)
+  {
+    temp_reading=((temp_reading*3.3/1023.0)-0.33)*100.0+273.15;
+    lcd.print(temp_reading);
+    lcd.print("K");
+  }
+  else if(millikelvin)
+  {
+    temp_reading=(((temp_reading*3.3/1023.0)-0.33)*100.0+273.15)*1000;
+    lcd.print(temp_reading);
+    lcd.print("mk");
+  }  
   lcd.setCursor(0,1);
   lcd.print("   Light:");
-  lcd.print(light_reading);
-  lcd.print("FC");
+  if(footcandle)
+  {
+    light_reading=(light_reading/1023.0)*3.3;
+    lcd.print(light_reading);
+    lcd.print("FC");
+  }
+  else if(milivolts)
+  {
+    light_reading=(light_reading/1023.0)*3300;
+    lcd.print(light_reading);
+    lcd.print("mV");
+  }
 }
