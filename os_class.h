@@ -1,3 +1,4 @@
+/* This includes all the structures, headers and functions to create the operating system environment and is not implementation specific. */
 #include <stdarg.h> // For variadric argument functions.
 #include <stdio.h> // For good measure I always include this.
 #include <stdlib.h> // For malloc/calloc.

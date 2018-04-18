@@ -1,3 +1,8 @@
+/* This header contains the register assignments, the LCD initialization, 
+ *  all implementation specific variables and semaphores, 
+ *  all implementation specific functions that don't require the operative data structure system, 
+ *  and then creates an operative data structure system that can be accessed from a root node.
+ */
 const int tp=A0; // temp probe
 const int lp=A2; // light probe
 const int d7=13; // d4-d7 are LCD pins
@@ -11,29 +16,35 @@ const int but_down=6;
 const int but_enter=5;
 const int but_back=4;
 const int but_menu=2; // Interrupt pin to engage menu.
-volatile int light_reading=0; // Variable to store light sensor reading.
-volatile int temp_reading=0; // Variable to store temperature sensor reading.
-volatile bool menu_state=0; // Menu state semaphore for menu mode via an interrupt pin.
-volatile int cursor_state=0; // Cursor state semaphore; the menu items should have a blinking cursor on them for human readability. Also equals which opt your are on -1.
-const size_t cycle_length=500; // Cycle length in ms for refreshing a LCD so it looks nice, in ms.
-volatile size_t menu_counter=0; // Counter to ensure menu times out in menu_duration ms, and is reset whenever a nav button is pressed.
-const size_t menu_cycle_length=250; // Menu cycle length so it looks nice, in ms.
+LiquidCrystal lcd(rs,enable,d4,d5,d6,d7);
+
+const size_t max_node_depth=2; // Be careful this is set correctly, it's used to determine how much memory is alloacated to the node_indices array. This would be n in the above example.
+const size_t cycle_length=500; // Cycle length in ms for refreshing the LCD's displayed data so it looks nice, in ms.
+const size_t menu_cycle_length=250; // Menu cycle length so it looks nice, and is responsive to input, in ms.
 const size_t menu_duration=5000; // Menu duration (time until it leaves menu mode) in ms.
 const size_t menu_maxcount=menu_duration/menu_cycle_length; // Menu counter max count. When the count reaches this number the menu state is flipped.
-LiquidCrystal lcd(rs,enable,d4,d5,d6,d7);
+
+volatile size_t menu_counter=0; // Counter to ensure menu times out in menu_duration ms, and is reset whenever a nav button is pressed.
+volatile size_t node_depth=0; // RootNode->node[a1]->node->[a2]->....->node[an] is the topology this counter follows. A node depth of 0 denotes the root node.
+volatile size_t screen_count=0; // This is "i" in: RootNode->node[a1]->...->node[an]->screen[i] ; that is, this is which screen you are on in a particular node.
+volatile size_t line_count=0; // This is "j" in: RootNode->node[a1]->...->node[an]->screen[i]->line[j] ; that is, this is which line you are on in a particular screen in a particular node.
+volatile size_t *node_indices; // This is the array of node index coefficients {a1,a2,a3,...,an} in the above example. It is initialized in the setup function of "main".
+volatile size_t opt_counter=0; // This is which option you are on in any particular node. Registered functions can be attached to options.
+
+volatile int light_reading=0; // Variable to store light sensor reading.
+volatile int temp_reading=0; // Variable to store temperature sensor reading.
+volatile float offset=0.; // Offset used to calibrate temperature probe to the triple point of water.
+
+volatile bool menu_state=0; // Menu state semaphore for menu mode via an interrupt pin.
+volatile int cursor_state=0; // Cursor state semaphore; the menu items should have a blinking cursor on them for human readability. Also equals which opt your are on -1.
 volatile bool celcius=1; // Semaphore to indicate what temperature unit to display.
 volatile bool farenheight=0; // Semaphore to indicate what temperature unit to display.
 volatile bool kelvin=0; // Semaphore to indicate what temperature unit to display.
 volatile bool millikelvin=0; // Semaphore to indicate what temperature unit to display.
 volatile bool footcandle=0; // Semaphore to indicate what light unit to display.
 volatile bool milivolts=1; // Semaphore to indicate what light unit to display.
-volatile float offset=0.; // Offset used to calibrate temperature probe to the triple point of water.
-volatile size_t node_depth=2; // RootNode->node[a1]->node->[a2]->....->node[an] is the topology this counter follows. A node depth of 0 denotes the root node.
-volatile size_t max_node_depth=0; // Be careful this is set correctly, it's used to determine how much memory is alloacated to the node_indices array. This would be n in the above example.
-volatile size_t screen_count=0; // This is "i" in: RootNode->node[a1]->...->node[an]->screen[i] ; that is, this is which screen you are on in a particular node.
-volatile size_t line_count=0; // This is "j" in: RootNode->node[a1]->...->node[an]->screen[i]->line[j] ; that is, this is which line you are on in a particular screen in a particular node.
-volatile size_t *node_indices; // This is the array of node index coefficients {a1,a2,a3,...,an} in the above example.
-volatile size_t opt_counter=0; // This is which option you are on in any particular node. Registered functions can be attached to options.
+
+void cursor_pos(int i); // Function to properly allign the blinking cursor in this specific 16x2 implementation.
 void teststream(void);
 void teststop(void);
 void testfc(void);
@@ -43,6 +54,37 @@ void testc(void);
 void testf(void);
 void testk(void);
 void testmk(void);
+void cursor_pos(int i)
+{
+  i%=4;
+  switch(i)
+  {
+    case 0:
+    {
+      lcd.setCursor(0,1);
+      break;
+    }
+    case 1:
+    {
+      lcd.setCursor(8,1);
+      break;
+    }
+    case 2:
+    {
+      lcd.setCursor(0,0);
+      break;
+    }
+    case 3:
+    {
+      lcd.setCursor(8,0);
+      break;
+    }
+    default:
+    {
+      break;
+    }
+  }
+}
 void testcalib (void)
 {
   Serial.println("testcalib");
