@@ -40,20 +40,21 @@ volatile int cursor_state=0; // Cursor state semaphore; the menu items should ha
 volatile bool celcius=1; // Semaphore to indicate what temperature unit to display.
 volatile bool farenheight=0; // Semaphore to indicate what temperature unit to display.
 volatile bool kelvin=0; // Semaphore to indicate what temperature unit to display.
-volatile bool millikelvin=0; // Semaphore to indicate what temperature unit to display.
+volatile bool millivolts_temp=0; // Semaphore to indicate what temperature unit to display.
 volatile bool footcandle=0; // Semaphore to indicate what light unit to display.
-volatile bool milivolts=1; // Semaphore to indicate what light unit to display.
+volatile bool millivolts_light=1; // Semaphore to indicate what light unit to display.
+volatile bool stream=0; // Semaphore to indicate if data stream mode is active.
 
 void cursor_pos(int i); // Function to properly allign the blinking cursor in this specific 16x2 implementation.
 void teststream(void);
 void teststop(void);
 void testfc(void);
-void testmilivolts(void);
+void testmillivolts_light(void);
 void testcalib(void);
 void testc(void);
 void testf(void);
 void testk(void);
-void testmk(void);
+void testmv(void);
 void cursor_pos(int i)
 {
   i%=4;
@@ -87,9 +88,18 @@ void cursor_pos(int i)
 }
 void testcalib (void)
 {
-  Serial.println("testcalib");
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("FUNCTION PRESSED");
+  lcd.setCursor(0,1);
+  lcd.print("*Temp Calibrate*");
+  temp_reading=analogRead(tp);
+  offset=102.3-temp_reading;
+  Serial.println(offset);
+  delay(1500);
+  lcd.clear();
 }
-void testmilivolts(void)
+void testmillivolts_light(void)
 {
   lcd.clear();
   lcd.setCursor(0,0);
@@ -97,7 +107,7 @@ void testmilivolts(void)
   lcd.setCursor(0,1);
   lcd.print("****LIGHT:mV****");
   footcandle=0;
-  milivolts=1;
+  millivolts_light=1;
   delay(1500);
   lcd.clear();
 }
@@ -109,17 +119,31 @@ void testfc(void)
   lcd.setCursor(0,1);
   lcd.print("****LIGHT:FC****");
   footcandle=1;
-  milivolts=0;
+  millivolts_light=0;
   delay(1500);
   lcd.clear();
 }
 void teststream(void)
 {
-  Serial.println("teststream");
+  stream=1;
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("FUNCTION PRESSED");
+  lcd.setCursor(0,1);
+  lcd.print("*STREAM STARTED*");
+  delay(1500);
+  lcd.clear();
 }
 void teststop(void)
 {
-  Serial.println("teststop");
+  stream=0;
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("FUNCTION PRESSED");
+  lcd.setCursor(0,1);
+  lcd.print("***STREAM STOP**");
+  delay(1500);
+  lcd.clear();
 }
 void testc(void)
 {
@@ -131,7 +155,7 @@ void testc(void)
   celcius=1;
   farenheight=0;
   kelvin=0;
-  millikelvin=0;
+  millivolts_temp=0;
   delay(1500);
   lcd.clear();
 }
@@ -145,7 +169,7 @@ void testf(void)
   celcius=0;
   farenheight=1;
   kelvin=0;
-  millikelvin=0;
+  millivolts_temp=0;
   delay(1500);
   lcd.clear();
 }
@@ -159,21 +183,21 @@ void testk(void)
   celcius=0;
   farenheight=0;
   kelvin=1;
-  millikelvin=0;
+  millivolts_temp=0;
   delay(1500);
   lcd.clear();
 }
-void testmk(void)
+void testmv(void)
 {  
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("FUNCTION PRESSED");
   lcd.setCursor(0,1);
-  lcd.print("****UNITS:mK****");
+  lcd.print("****UNITS:mV****");
   celcius=0;
   farenheight=0;
   kelvin=0;
-  millikelvin=01;
+  millivolts_temp=01;
   delay(1500);
   lcd.clear();
 }
@@ -183,19 +207,19 @@ screen *temp0=  makescreen(2,"******TEMP******","1:UNITS 2:CALIB ");
 screen *light0= makescreen(2,"******LIGHT*****","1:mV    2:FC    ");
 screen *serial0=makescreen(2,"**SERIAL STREAM*","1:START 2:STOP  ");
 screen *units0=makescreen(2,"******UNITS*****","1:C     2:F     ");
-screen *units1=makescreen(2,"3:K     4:mK    ","****************");
+screen *units1=makescreen(2,"3:K     4:mV    ","****************");
 registered_function *regtestcalib=register_function(testcalib);
-registered_function *regtestmilivolts=register_function(testmilivolts);
+registered_function *regtestmillivolts_light=register_function(testmillivolts_light);
 registered_function *regtestfc=register_function(testfc);
 registered_function *regteststream=register_function(teststream);
 registered_function *regteststop=register_function(teststop);
 registered_function *regtestc=register_function(testc);
 registered_function *regtestf=register_function(testf);
 registered_function *regtestk=register_function(testk);
-registered_function *regtestmk=register_function(testmk);
-node *units=makenode(bundle_screen(2,units0,units1),NULL,2,0,4,makenodereg(order_opts(4,"1111"),4,bundle_registered_functions(4,regtestc,regtestf,regtestk,regtestmk)));
+registered_function *regtestmv=register_function(testmv);
+node *units=makenode(bundle_screen(2,units0,units1),NULL,2,0,4,makenodereg(order_opts(4,"1111"),4,bundle_registered_functions(4,regtestc,regtestf,regtestk,regtestmv)));
 node *serial=makenode(&serial0,NULL,1,0,2,makenodereg(order_opts(2,"11"),2,bundle_registered_functions(2,regteststream,regteststop)));
-node *light=makenode(&light0,NULL,1,0,2,makenodereg(order_opts(2,"11"),2,bundle_registered_functions(2,regtestmilivolts,regtestfc)));
+node *light=makenode(&light0,NULL,1,0,2,makenodereg(order_opts(2,"11"),2,bundle_registered_functions(2,regtestmillivolts_light,regtestfc)));
 node *temp=makenode(&temp0,bundle_node(1,units),1,1,2,makenodereg(order_opts(2,"01"),1,bundle_registered_functions(1,regtestcalib)));
 node *menu=makenode(bundle_screen(2,menu0,menu1),bundle_node(3,temp,light,serial),2,3,3,makenodereg(order_opts(3,NULL),0,NULL));
 node *root=menu;

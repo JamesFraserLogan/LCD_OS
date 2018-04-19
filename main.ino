@@ -1,4 +1,6 @@
-/* A program to display temperature and light data with options to modify outputs, calibrate temperature, and stream serial data*/
+/* A program to display temperature and light data with options to modify outputs, calibrate temperature, and stream serial data
+*  Input voltage is assumed 3.3V
+*/
 #include <LiquidCrystal.h> // Must be included first as os_class.h requires it.
 #include "os_class.h" // Must be included before local.h; this is the operative system of structures, and functions to build them.
 #include "local.h" // All implementation specific variables, semaphores and functions.
@@ -32,7 +34,6 @@ void loop()
     if(digitalRead(but_up)==HIGH)
     {
       menu_counter=0;
-      Serial.println(cursor_state);
       if(cursor_state<((root->nopts)-1))
       {
         cursor_state++;
@@ -46,7 +47,6 @@ void loop()
     else if(digitalRead(but_down)==HIGH)
     {
       menu_counter=0;
-      Serial.println(cursor_state);
       if(cursor_state>0)
       {
         cursor_state--;
@@ -133,6 +133,7 @@ void display_temp_light(void)
 {
   light_reading=analogRead(lp);
   temp_reading=analogRead(tp)+offset;
+  Serial.println(offset);
   lcd.setCursor(0,0);
   lcd.print("   Temp:");
   if(celcius)
@@ -153,11 +154,10 @@ void display_temp_light(void)
     lcd.print(temp_reading);
     lcd.print("K");
   }
-  else if(millikelvin)
+  else if(millivolts_temp)
   {
-    temp_reading=(((temp_reading*3.3/1023.0)-0.33)*100.0+273.15)*1000;
-    lcd.print(temp_reading);
-    lcd.print("mk");
+    lcd.print(temp_reading*3.3);
+    lcd.print("mV");
   }  
   lcd.setCursor(0,1);
   lcd.print("   Light:");
@@ -167,10 +167,17 @@ void display_temp_light(void)
     lcd.print(light_reading);
     lcd.print("FC");
   }
-  else if(milivolts)
+  else if(millivolts_light)
   {
     light_reading=(light_reading/1023.0)*3300;
     lcd.print(light_reading);
     lcd.print("mV");
+  }
+  if(stream)
+  {
+    Serial.print("Temp:");
+    Serial.println(temp_reading);
+    Serial.print("Light:");
+    Serial.println(light_reading);
   }
 }
